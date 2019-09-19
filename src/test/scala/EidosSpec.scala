@@ -83,9 +83,8 @@ class EidosSpec extends Specification with TypecheckMatchers with ScalaCheck {
   "Tag" should {
     "be case objects" in {
       trait Trait
-
-      // MakeLabel is the reason why "case" is required
-      object Object extends MakeLabel
+      class Class
+      object Object
       type Object = Object.type
 
       case object CaseObject
@@ -96,6 +95,7 @@ class EidosSpec extends Specification with TypecheckMatchers with ScalaCheck {
 
       // format: off
       { typecheck("""Id.of[Trait]("")""") must failWith(errorMessage("Trait")) }
+      { typecheck("""Id.of[Class]("")""") must failWith(errorMessage("Class")) }
       { typecheck("""Id.of[Object]("")""") must failWith(errorMessage("Object")) }
       { typecheck("""Id.of[CaseObject]("")""") must succeed }
       // format: on

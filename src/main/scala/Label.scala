@@ -6,11 +6,18 @@ trait Label[A] {
 }
 
 object Label {
-  private[id] def default[A] = new Label[A] {
-    def label = ""
+  private val defaultLabel: Label[Nothing] = new Label[Nothing] {
+    val label = ""
   }
 
+  private[id] def default[A]: Label[A] = defaultLabel.asInstanceOf[Label[A]]
+
   private[id] sealed trait LabelDefinitionConflict
+
+  private def nameOf[A](implicit m: Manifest[A]) = {
+    val typeName = m.toString
+    typeName.substring(0, typeName.lastIndexOf(".type"))
+  }
 
   trait MakeLabel { self =>
     // See eidos.id.Format.UUID for an explanation of this
@@ -18,10 +25,9 @@ object Label {
     final def `"In Eidos, you can only extend one of MakeLabel or CustomLabel"`
         : LabelDefinitionConflict = null
 
-    implicit final def l(implicit ev: self.type <:< Product): Label[this.type] =
-      new Label[this.type] {
-        def label = self.productPrefix
-      }
+    implicit final val l: Label[this.type] = new Label[this.type] {
+      val label: String = nameOf[self.type]
+    }
   }
 
   trait CustomLabel {
@@ -30,10 +36,10 @@ object Label {
     // format: on
     def label: String
 
-    private def customLabel = label
+    private val customLabel = label
 
-    implicit final def l: Label[this.type] = new Label[this.type] {
-      def label = customLabel
+    implicit final val l: Label[this.type] = new Label[this.type] {
+      val label = customLabel
     }
   }
 }
